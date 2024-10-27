@@ -1,0 +1,13 @@
+groq
+langchain
+langgraph
+python-dotenv
+google-generativeai
+langchain_google_genai
+langchain_community
+tiktoken
+langchain-google-genai
+langchain-chroma>=0.1.2
+beautifulsoup4==4.12.3
+requests==2.32.3
+
