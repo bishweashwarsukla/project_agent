@@ -30,5 +30,5 @@ optional -> web serach api add as a node
 
 ![graph image 2](/project_agent/input/images/graph2.jpg)
 
-<img src="/project_agent/input/images/graph.jpg" width="128"/>
-<img src="/project_agent/input/images/graph2.jpg" width="128"/>
+<img src="/project_agent/input/images/graph-1.png" width="128"/>
+<img src="/project_agent/input/images/graph-2.png" width="128"/>
