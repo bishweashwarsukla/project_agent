@@ -26,6 +26,5 @@ optional -> web serach api add as a node
 7) how much FII and DII buy/sold every day - add this as a feature 
 8) in webapp, make it in for loop such till user hit exit, it will show result 
 
-![Alt text](/home/bishweashwarsukla/project/project_agent/input/images/graph.jpg)
-
-![Alt text](/home/bishweashwarsukla/project/project_agent/input/images/graph2.jpg)
+![graph image](/project_agent/input/images/graph.jpg)
+![graph image 2](/project_agent/input/images/graph2.jpg)
