@@ -25,6 +25,9 @@ optional -> web serach api add as a node
 6) langsmith ( optional)
 7) how much FII and DII buy/sold every day - add this as a feature 
 8) in webapp, make it in for loop such till user hit exit, it will show result 
+9) add relevant questions as suggestion to user so he/she can check out those
+10) add yahoo finance api
+
 
 ![graph image](/project_agent/input/images/graph.jpg)
 
