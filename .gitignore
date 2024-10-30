@@ -1,0 +1,6 @@
+agent_project/
+.venv/
+.env
+/home/bishweashwarsukla/project/.venv
+__pycache__/
+../.venv/
