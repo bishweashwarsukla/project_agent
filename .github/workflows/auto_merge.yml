@@ -18,13 +18,22 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Merge bish_dev into prod
+      - name: Update prod branch
         run: |
           git fetch origin
           git checkout prod
-          git merge --no-ff bish_dev
+          git pull origin prod
+
+      - name: Merge bish_dev into prod
+        run: |
+          git merge --no-ff origin/bish_dev
+
+      - name: Push changes to prod
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           git push origin prod
 
-      - name: Clean up
+      - name: Clean up on failure
         if: failure()
         run: git reset --hard
