@@ -1,4 +1,3 @@
-from app import app
 import os
 from dotenv import load_dotenv
 
