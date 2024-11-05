@@ -37,6 +37,7 @@ optional -> web serach api add as a node
 <img src="/project_agent/input/images/graph-2.png" width="128"/>
 
 how to run :
+- sudo systemctl start docker / start docker desktop if in ubuntu
 - docker pull {image name from docker hub}
 - docker run - p 5000:5000 {image name from docker hub}
 
