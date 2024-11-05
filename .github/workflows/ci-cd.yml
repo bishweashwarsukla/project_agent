@@ -2,9 +2,9 @@ name: CI/CD for Dockerized Flask App
 
 on:
   push:
-    branches: [ main , bish_dev , kgvt_dev]
+    branches: [ prod , bish_dev , kgvt_dev]
   pull_request:
-    branches: [ main ]
+    branches: [ prod ]
 
 jobs:
   dockerbuild:
