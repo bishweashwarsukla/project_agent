@@ -3,7 +3,7 @@ name: Auto Merge bish_dev to prod
 on:
   push:
     branches:
-      - bish_dev
+      - [ bish_dev ]
 
 jobs:
   auto-merge:
@@ -30,7 +30,7 @@ jobs:
 
       - name: Push changes to prod
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
         run: |
           git push origin prod
 
