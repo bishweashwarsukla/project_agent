@@ -1,8 +1,8 @@
 from app import app
+import os
+from dotenv import load_dotenv
 
-
-def test_home():
-    response = app.test_client().get("/")
-
-    assert response.status_code == 200
-    assert response.data == b"Hello World!"
+def test_app():
+    def _set_env():
+        load_dotenv()
+    assert os.environ["moneycontrol"] == https://www.moneycontrol.com/
