@@ -36,6 +36,3 @@ optional -> web serach api add as a node
 <img src="/project_agent/input/images/graph-1.png" width="128"/>
 <img src="/project_agent/input/images/graph-2.png" width="128"/>
 
-how to run :
-- docker pull {image name from docker hub}
-- docker run - p 5000:5000 {image name from docker hub}
