@@ -2,7 +2,7 @@ name: CI/CD for Dockerized App
 
 on:
   push:
-    branches: [ bish_dev , kgvt_dev]
+    branches: [ prod , bish_dev , kgvt_dev]
   pull_request:
     branches: [ prod ]
 
