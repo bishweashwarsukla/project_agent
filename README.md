@@ -32,3 +32,6 @@ optional -> web serach api add as a node
 
 <img src="/project_agent/input/images/graph-1.png" width="128"/>
 <img src="/project_agent/input/images/graph-2.png" width="128"/>
+
+
+[![CI/CD for Dockerized App](https://github.com/bishweashwarsukla/project_agent/actions/workflows/ci-cd.yml/badge.svg?branch=prod)](https://github.com/bishweashwarsukla/project_agent/actions/workflows/ci-cd.yml)
