@@ -1,0 +1,30 @@
+name: Auto Merge bish_dev to prod
+
+on:
+  push:
+    branches:
+      - bish_dev
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge bish_dev into prod
+        run: |
+          git fetch origin
+          git checkout prod
+          git merge --no-ff bish_dev
+          git push origin prod
+
+      - name: Clean up
+        if: failure()
+        run: git reset --hard

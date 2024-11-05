@@ -60,11 +60,11 @@ def process_user_input(input_text):
         # other params...
     )
 
-    urls = [os.environ["moneycontrol"], os.environ["economic_times"]]
+    urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
 
 
 
-    urls = [os.environ["moneycontrol"], os.environ["economic_times"]]
+    urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
 
     docs = [WebBaseLoader(url).load() for url in urls]
     docs_list = [item for sublist in docs for item in sublist]
@@ -82,13 +82,13 @@ def process_user_input(input_text):
     )
     retriever = vectorstore.as_retriever()
 
-    results = vectorstore.similarity_search(
-        "jio finance",
-        k=2,
-        # filter={"source": "tweet"},
-    )
-    for res in results:
-        print(f"* {res.page_content} [{res.metadata}]")
+    # results = vectorstore.similarity_search(
+    #     "jio finance",
+    #     k=2,
+    #     # filter={"source": "tweet"},
+    # )
+    # for res in results:
+    #     print(f"* {res.page_content} [{res.metadata}]")
 
 
 
@@ -367,11 +367,39 @@ def process_user_input(input_text):
     #         pprint.pprint(value, indent=2, width=80, depth=None)
     #     pprint.pprint("\n---\n")
 
-    output_data = ""
+    #original output 
+    # output_data = ""
+    # for output in graph.stream(inputs):
+    #     for key, value in output.items():
+    #         output_data += f"\n**Output from node '{key}':**\n---\n"
+    #         output_data += f"{pprint.pformat(value, indent=2, width=80, depth=None)}\n"
+    #         output_data += "\n---\n"
+    
+    # return output_data
+
+
+    #giving first cut final result only 
+    # for output in graph.stream(inputs):
+    #     for key, value in output.items():
+    #         # Update final_output with the current output
+    #         #final_output = f"\n**Output from node '{key}':**\n---\n"
+    #         final_output += f"{pprint.pformat(value, indent=2, width=80, depth=None)}"
+    #         final_output += "\n---\n"
+    
+    # # Return only the final output after the loop completes
+    # return final_output
+
+
+    final_output = ""
+
     for output in graph.stream(inputs):
         for key, value in output.items():
-            output_data += f"\n**Output from node '{key}':**\n---\n"
-            output_data += f"{pprint.pformat(value, indent=2, width=80, depth=None)}\n"
-            output_data += "\n---\n"
-    
-    return output_data
+            # Assuming value is a dictionary, extract its values
+            if isinstance(value, dict):
+                final_output += "\n".join(str(v) for v in value.values())
+            else:
+                final_output += str(value)  # Handle non-dictionary values
+                
+            final_output += "\n---\n"  # Separator for readability
+
+    return final_output
