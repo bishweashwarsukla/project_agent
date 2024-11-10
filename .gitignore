@@ -4,3 +4,5 @@ agent_project/
 __pycache__/
 ../.venv/
 project_agent/
+/home/bishweashwarsukla/project/project_agent/.env
+.env

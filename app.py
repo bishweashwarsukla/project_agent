@@ -1,5 +1,5 @@
 import streamlit as st
-from main_test import process_user_input, build_vector_db
+from main import process_user_input, build_vector_db
 
 # Initialize session state to keep track of whether the vector DB has been created
 if "vector_db_created" not in st.session_state:

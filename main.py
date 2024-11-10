@@ -59,17 +59,30 @@ def build_vector_db():
     docs = [WebBaseLoader(url).load() for url in urls]
     docs_list = [item for sublist in docs for item in sublist]
 
-    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=100, chunk_overlap=20
-    )
-    doc_splits = text_splitter.split_documents(docs_list)
+    VECTOR_DB_PATH='./agentDB'
 
-    # Add to vectorDB
-    vectorstore = Chroma.from_documents(
-        documents=doc_splits,
-        collection_name="rag-chroma",
-        embedding=embeddings,
-    )
+    if os.path.exists(VECTOR_DB_PATH):
+        print("Vector database already exists. Skipping creation.")
+        # Load the existing vector database
+        vectorstore = Chroma(
+            collection_name="rag-chroma",
+           # embedding=embeddings,
+            persist_directory=VECTOR_DB_PATH
+        )
+    else:  
+        text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+            chunk_size=100, chunk_overlap=20
+        )
+        doc_splits = text_splitter.split_documents(docs_list)
+
+        # Add to vectorDB
+        vectorstore = Chroma.from_documents(
+            documents=doc_splits,
+            collection_name="rag-chroma",
+            embedding=embeddings,
+            persist_directory=VECTOR_DB_PATH
+        )
+    
     retriever = vectorstore.as_retriever()
 
     retriever_tool = create_retriever_tool(
@@ -179,13 +192,54 @@ def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore
     for output in graph.stream(inputs):
         for key, value in output.items():
             final_output = pprint.pformat(value, indent=2, width=80, depth=None)
-    print(type(final_output))
+
     print(final_output)
+    # Parse the output to get the final message content
     output_dict = ast.literal_eval(final_output)
-    final_message = output_dict['messages'][0]
-    print(type(final_message))
-    print(final_message)
-    return final_message
+    final_messages = output_dict.get("messages", [])
+
+    # Ensure `final_messages` is a list and each message is a dictionary before accessing 'content'
+    if isinstance(final_messages, list):
+        for message in final_messages:
+            if isinstance(message, dict):
+                content = message.get("content", "")
+                print(content)  # Print the content directly
+                return content  # Return the first content found
+            else:
+                print("Error: Message is not in expected dictionary format.")
+    else:
+        print("Error: Messages not in expected list format.")
+    
+    return "No valid content found."
+
+    # inputs = {"messages": [("user", input_text)]}
+    # final_output = ""
+
+    # for output in graph.stream(inputs):
+    #     for key, value in output.items():
+    #         final_output = pprint.pformat(value, indent=2, width=80, depth=None)
+
+    # print(type(final_output))
+    # print(final_output)
+    # # output_dict = ast.literal_eval(final_output)
+    # # final_message = output_dict['messages'][0]
+    # # print(type(final_message))
+    # # print(final_message)
+    # # return final_message
+
+    # # Parse the output to get the final message content
+    # output_dict = ast.literal_eval(final_output)
+    # final_messages = output_dict.get("messages", [])
+    
+    # # Print only the 'content' of each message
+    # for message in final_messages:
+    #     content = message.get("content", "")
+    #     print(content)  # Print the content directly
+    
+    # return content
 
 # Test the function
 # print(process_user_input('Is Jio financial shares up today?'))
+
+retriever_tool, retriever, tools, vectorstore=build_vector_db()
+process_user_input('Is bitcoin bullish?', retriever_tool, retriever, tools, vectorstore)

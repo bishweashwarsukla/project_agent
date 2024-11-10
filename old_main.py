@@ -39,65 +39,65 @@ from langgraph.graph import END, StateGraph, START
 from langgraph.prebuilt import ToolNode
 from langgraph.prebuilt import tools_condition
 
-def build_vector_db():
+# def build_vector_db():
 
-    def _set_env():
-        load_dotenv()
-        if "GOOGLE_API_KEY" not in os.environ:
-            os.environ["GOOGLE_API_KEY"] = getpass.getpass(
-                "Enter your Google AI API key: "
-            )
+#     def _set_env():
+#         load_dotenv()
+#         if "GOOGLE_API_KEY" not in os.environ:
+#             os.environ["GOOGLE_API_KEY"] = getpass.getpass(
+#                 "Enter your Google AI API key: "
+#             )
 
-    _set_env()
+#     _set_env()
 
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+#     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-pro",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2,
-        # other params...
-    )
+#     llm = ChatGoogleGenerativeAI(
+#         model="gemini-1.5-pro",
+#         temperature=0,
+#         max_tokens=None,
+#         timeout=None,
+#         max_retries=2,
+#         # other params...
+#     )
 
-    urls = [
-        os.environ["moneycontrol"],
-        os.environ["economic_times"],
-        os.environ["yahoo_fin"],
-    ]
+#     urls = [
+#         os.environ["moneycontrol"],
+#         os.environ["economic_times"],
+#         os.environ["yahoo_fin"],
+#     ]
 
-    docs = [WebBaseLoader(url).load() for url in urls]
-    docs_list = [item for sublist in docs for item in sublist]
+#     docs = [WebBaseLoader(url).load() for url in urls]
+#     docs_list = [item for sublist in docs for item in sublist]
 
-    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=100, chunk_overlap=20
-    )
-    doc_splits = text_splitter.split_documents(docs_list)
+#     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+#         chunk_size=100, chunk_overlap=20
+#     )
+#     doc_splits = text_splitter.split_documents(docs_list)
 
-    # Add to vectorDB
-    vectorstore = Chroma.from_documents(
-        documents=doc_splits,
-        collection_name="rag-chroma",
-        embedding=embeddings,
-    )
-    retriever = vectorstore.as_retriever()
+#     # Add to vectorDB
+#     vectorstore = Chroma.from_documents(
+#         documents=doc_splits,
+#         collection_name="rag-chroma",
+#         embedding=embeddings,
+#     )
+#     retriever = vectorstore.as_retriever()
 
-    retriever_tool = create_retriever_tool(
-        retriever,
-        "retriver_stock_market_updates",
-        "Search and return information about stocks in news whether they are good news or bad news , , bullish and bearnish newses as well",
-    )
+#     retriever_tool = create_retriever_tool(
+#         retriever,
+#         "retriver_stock_market_updates",
+#         "Search and return information about stocks in news whether they are good news or bad news , , bullish and bearnish newses as well",
+#     )
 
-    tools = [retriever_tool]
+#     tools = [retriever_tool]
 
-    return retriever_tool, retriever, tools, vectorstore
-
-
+#     return retriever_tool, retriever, tools, vectorstore
 
 
 
-def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore)::
+
+
+def process_user_input(input_text):
     def _set_env():
         load_dotenv()
         if "GOOGLE_API_KEY" not in os.environ:
@@ -117,45 +117,45 @@ def process_user_input(input_text, retriever_tool, retriever, tools, vectorstor
         # other params...
     )
 
-    # urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
+    urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
 
 
 
-    # urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
+    urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
 
-    # docs = [WebBaseLoader(url).load() for url in urls]
-    # docs_list = [item for sublist in docs for item in sublist]
+    docs = [WebBaseLoader(url).load() for url in urls]
+    docs_list = [item for sublist in docs for item in sublist]
 
-    # text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-    #     chunk_size=100, chunk_overlap=20
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        chunk_size=100, chunk_overlap=20
+    )
+    doc_splits = text_splitter.split_documents(docs_list)
+
+    # Add to vectorDB
+    vectorstore = Chroma.from_documents(
+        documents=doc_splits,
+        collection_name="rag-chroma",
+        embedding=embeddings,
+    )
+    retriever = vectorstore.as_retriever()
+
+    # results = vectorstore.similarity_search(
+    #     "jio finance",
+    #     k=2,
+    #     # filter={"source": "tweet"},
     # )
-    # doc_splits = text_splitter.split_documents(docs_list)
-
-    # # Add to vectorDB
-    # vectorstore = Chroma.from_documents(
-    #     documents=doc_splits,
-    #     collection_name="rag-chroma",
-    #     embedding=embeddings,
-    # )
-    # retriever = vectorstore.as_retriever()
-
-    # # results = vectorstore.similarity_search(
-    # #     "jio finance",
-    # #     k=2,
-    # #     # filter={"source": "tweet"},
-    # # )
-    # # for res in results:
-    # #     print(f"* {res.page_content} [{res.metadata}]")
+    # for res in results:
+    #     print(f"* {res.page_content} [{res.metadata}]")
 
 
 
-    # retriever_tool = create_retriever_tool(
-    #     retriever,
-    #     "retriver_stock_market_updates",
-    #     "Search and return information about stocks in news whether they are good news or bad news , , bullish and bearnish newses as well",
-    # )
+    retriever_tool = create_retriever_tool(
+        retriever,
+        "retriver_stock_market_updates",
+        "Search and return information about stocks in news whether they are good news or bad news , , bullish and bearnish newses as well",
+    )
 
-    # tools = [retriever_tool]
+    tools = [retriever_tool]
 
 
 
@@ -460,7 +460,7 @@ def process_user_input(input_text, retriever_tool, retriever, tools, vectorstor
     
     return final_message
 
-# process_user_input('is jio financial shares up today ?')
+process_user_input('is jio financial shares up today ?')
    
 
     # for output in graph.stream(inputs):
