@@ -39,8 +39,65 @@ from langgraph.graph import END, StateGraph, START
 from langgraph.prebuilt import ToolNode
 from langgraph.prebuilt import tools_condition
 
+def build_vector_db():
 
-def process_user_input(input_text):
+    def _set_env():
+        load_dotenv()
+        if "GOOGLE_API_KEY" not in os.environ:
+            os.environ["GOOGLE_API_KEY"] = getpass.getpass(
+                "Enter your Google AI API key: "
+            )
+
+    _set_env()
+
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-pro",
+        temperature=0,
+        max_tokens=None,
+        timeout=None,
+        max_retries=2,
+        # other params...
+    )
+
+    urls = [
+        os.environ["moneycontrol"],
+        os.environ["economic_times"],
+        os.environ["yahoo_fin"],
+    ]
+
+    docs = [WebBaseLoader(url).load() for url in urls]
+    docs_list = [item for sublist in docs for item in sublist]
+
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        chunk_size=100, chunk_overlap=20
+    )
+    doc_splits = text_splitter.split_documents(docs_list)
+
+    # Add to vectorDB
+    vectorstore = Chroma.from_documents(
+        documents=doc_splits,
+        collection_name="rag-chroma",
+        embedding=embeddings,
+    )
+    retriever = vectorstore.as_retriever()
+
+    retriever_tool = create_retriever_tool(
+        retriever,
+        "retriver_stock_market_updates",
+        "Search and return information about stocks in news whether they are good news or bad news , , bullish and bearnish newses as well",
+    )
+
+    tools = [retriever_tool]
+
+    return retriever_tool, retriever, tools, vectorstore
+
+
+
+
+
+def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore)::
     def _set_env():
         load_dotenv()
         if "GOOGLE_API_KEY" not in os.environ:
@@ -60,45 +117,45 @@ def process_user_input(input_text):
         # other params...
     )
 
-    urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
+    # urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
 
 
 
-    urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
+    # urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
 
-    docs = [WebBaseLoader(url).load() for url in urls]
-    docs_list = [item for sublist in docs for item in sublist]
+    # docs = [WebBaseLoader(url).load() for url in urls]
+    # docs_list = [item for sublist in docs for item in sublist]
 
-    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=100, chunk_overlap=20
-    )
-    doc_splits = text_splitter.split_documents(docs_list)
-
-    # Add to vectorDB
-    vectorstore = Chroma.from_documents(
-        documents=doc_splits,
-        collection_name="rag-chroma",
-        embedding=embeddings,
-    )
-    retriever = vectorstore.as_retriever()
-
-    # results = vectorstore.similarity_search(
-    #     "jio finance",
-    #     k=2,
-    #     # filter={"source": "tweet"},
+    # text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+    #     chunk_size=100, chunk_overlap=20
     # )
-    # for res in results:
-    #     print(f"* {res.page_content} [{res.metadata}]")
+    # doc_splits = text_splitter.split_documents(docs_list)
+
+    # # Add to vectorDB
+    # vectorstore = Chroma.from_documents(
+    #     documents=doc_splits,
+    #     collection_name="rag-chroma",
+    #     embedding=embeddings,
+    # )
+    # retriever = vectorstore.as_retriever()
+
+    # # results = vectorstore.similarity_search(
+    # #     "jio finance",
+    # #     k=2,
+    # #     # filter={"source": "tweet"},
+    # # )
+    # # for res in results:
+    # #     print(f"* {res.page_content} [{res.metadata}]")
 
 
 
-    retriever_tool = create_retriever_tool(
-        retriever,
-        "retriver_stock_market_updates",
-        "Search and return information about stocks in news whether they are good news or bad news , , bullish and bearnish newses as well",
-    )
+    # retriever_tool = create_retriever_tool(
+    #     retriever,
+    #     "retriver_stock_market_updates",
+    #     "Search and return information about stocks in news whether they are good news or bad news , , bullish and bearnish newses as well",
+    # )
 
-    tools = [retriever_tool]
+    # tools = [retriever_tool]
 
 
 
@@ -130,7 +187,7 @@ def process_user_input(input_text):
             str: A decision for whether the documents are relevant or not
         """
 
-        print("---CHECK RELEVANCE---")
+        #print("---CHECK RELEVANCE---")
 
         # Data model
         class grade(BaseModel):
@@ -176,12 +233,12 @@ def process_user_input(input_text):
         score = scored_result.binary_score
 
         if score == "yes":
-            print("---DECISION: DOCS RELEVANT---")
+            #print("---DECISION: DOCS RELEVANT---")
             return "generate"
 
         else:
-            print("---DECISION: DOCS NOT RELEVANT---")
-            print(score)
+            #print("---DECISION: DOCS NOT RELEVANT---")
+            #print(score)
             return "rewrite"
 
 
@@ -199,7 +256,7 @@ def process_user_input(input_text):
         Returns:
             dict: The updated state with the agent response appended to messages
         """
-        print("---CALL AGENT---")
+        #print("---CALL AGENT---")
         messages = state["messages"]
         # model = ChatOpenAI(temperature=0, streaming=True, model="gpt-4-turbo")
         model =  ChatGoogleGenerativeAI(
@@ -228,7 +285,7 @@ def process_user_input(input_text):
             dict: The updated state with re-phrased question
         """
 
-        print("---TRANSFORM QUERY---")
+        #print("---TRANSFORM QUERY---")
         messages = state["messages"]
         question = messages[0].content
 
@@ -269,7 +326,7 @@ def process_user_input(input_text):
         Returns:
             dict: The updated state with re-phrased question
         """
-        print("---GENERATE---")
+        #print("---GENERATE---")
         messages = state["messages"]
         question = messages[0].content
         last_message = messages[-1]
@@ -302,7 +359,7 @@ def process_user_input(input_text):
         return {"messages": [response]}
 
 
-    print("*" * 20 + "Prompt[rlm/rag-prompt]" + "*" * 20)
+    #print("*" * 20 + "Prompt[rlm/rag-prompt]" + "*" * 20)
     prompt = hub.pull("rlm/rag-prompt").pretty_print()  # Show what the prompt looks like
 
 
@@ -377,29 +434,43 @@ def process_user_input(input_text):
     
     # return output_data
 
-
-    #giving first cut final result only 
-    # for output in graph.stream(inputs):
-    #     for key, value in output.items():
-    #         # Update final_output with the current output
-    #         #final_output = f"\n**Output from node '{key}':**\n---\n"
-    #         final_output += f"{pprint.pformat(value, indent=2, width=80, depth=None)}"
-    #         final_output += "\n---\n"
-    
-    # # Return only the final output after the loop completes
-    # return final_output
-
-
+    import pprint
+    import ast
+    # Initialize final_output as an empty dictionary string
     final_output = ""
 
     for output in graph.stream(inputs):
         for key, value in output.items():
-            # Assuming value is a dictionary, extract its values
-            if isinstance(value, dict):
-                final_output += "\n".join(str(v) for v in value.values())
-            else:
-                final_output += str(value)  # Handle non-dictionary values
-                
-            final_output += "\n---\n"  # Separator for readability
+            # Only store the latest dictionary in final_output, without extra text
+            final_output = pprint.pformat(value, indent=2, width=80, depth=None)
 
-    return final_output
+    # Now final_output will only contain the dictionary as a formatted string
+    print('original final output')
+    # Return only the final output after the loop completes
+    # Convert the string to a dictionary
+    print(type(final_output))
+    print(final_output)
+    output_dict = ast.literal_eval(final_output)
+
+    print("converted coutput")
+    # Extract the message and print it
+    final_message = output_dict['messages'][0]
+    print(type(final_message))
+    print(final_message)
+    
+    return final_message
+
+# process_user_input('is jio financial shares up today ?')
+   
+
+    # for output in graph.stream(inputs):
+    #     for key, value in output.items():
+    #         # Assuming value is a dictionary, extract its values
+    #         if isinstance(value, dict):
+    #             final_output += "\n".join(str(v) for v in value.values())
+    #         else:
+    #             final_output += str(value)  # Handle non-dictionary values
+                
+    #         final_output += "\n---\n"  # Separator for readability
+
+    # return final_output
