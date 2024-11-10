@@ -445,22 +445,22 @@ def process_user_input(input_text):
             final_output = pprint.pformat(value, indent=2, width=80, depth=None)
 
     # Now final_output will only contain the dictionary as a formatted string
-    print('original final output')
+    # print('original final output')
     # Return only the final output after the loop completes
     # Convert the string to a dictionary
-    print(type(final_output))
+    # print(type(final_output))
     print(final_output)
     output_dict = ast.literal_eval(final_output)
 
-    print("converted coutput")
+    # print("converted coutput")
     # Extract the message and print it
     final_message = output_dict['messages'][0]
-    print(type(final_message))
+    # print(type(final_message))
     print(final_message)
     
     return final_message
 
-process_user_input('is jio financial shares up today ?')
+process_user_input('is bajaj auto a good stock')
    
 
     # for output in graph.stream(inputs):

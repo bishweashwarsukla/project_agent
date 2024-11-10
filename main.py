@@ -79,11 +79,13 @@ def build_vector_db():
         vectorstore = Chroma.from_documents(
             documents=doc_splits,
             collection_name="rag-chroma",
-            embedding=embeddings,
+            #embedding=embeddings,
             persist_directory=VECTOR_DB_PATH
         )
     
-    retriever = vectorstore.as_retriever()
+    # retriever = vectorstore.as_retriever()
+    # Initialize retriever with embeddings
+    retriever = vectorstore.as_retriever(embedding_function=embeddings.embed_query)
 
     retriever_tool = create_retriever_tool(
         retriever,
@@ -242,4 +244,4 @@ def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore
 # print(process_user_input('Is Jio financial shares up today?'))
 
 retriever_tool, retriever, tools, vectorstore=build_vector_db()
-process_user_input('Is bitcoin bullish?', retriever_tool, retriever, tools, vectorstore)
+process_user_input('is jio financial shares up ?', retriever_tool, retriever, tools, vectorstore)

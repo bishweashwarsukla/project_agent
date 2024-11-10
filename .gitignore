@@ -6,3 +6,4 @@ __pycache__/
 project_agent/
 /home/bishweashwarsukla/project/project_agent/.env
 .env
+.gitignore
