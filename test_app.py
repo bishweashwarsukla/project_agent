@@ -8,4 +8,7 @@ def test_app():
 
     _set_env()
 
-    assert os.environ["moneycontrol"] == "https://www.moneycontrol.com/"
+    assert (
+        os.environ["moneycontrol"]
+        == "https://www.moneycontrol.com/stocks/marketstats/index.php"
+    )
