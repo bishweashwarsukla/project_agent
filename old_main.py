@@ -5,9 +5,11 @@ import getpass
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import warnings
+
 warnings.filterwarnings("ignore")
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.vectorstores import Chroma
+
 # from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.tools.retriever import create_retriever_tool
@@ -31,6 +33,7 @@ from langchain import hub
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
+
 # from langchain_openai import ChatOpenAI
 
 from pydantic import BaseModel, Field
@@ -94,15 +97,13 @@ from langgraph.prebuilt import tools_condition
 #     return retriever_tool, retriever, tools, vectorstore
 
 
-
-
-
 def process_user_input(input_text):
     def _set_env():
         load_dotenv()
         if "GOOGLE_API_KEY" not in os.environ:
-            os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google AI API key: ")
-
+            os.environ["GOOGLE_API_KEY"] = getpass.getpass(
+                "Enter your Google AI API key: "
+            )
 
     _set_env()
 
@@ -117,11 +118,17 @@ def process_user_input(input_text):
         # other params...
     )
 
-    urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
+    urls = [
+        os.environ["moneycontrol"],
+        os.environ["economic_times"],
+        os.environ["yahoo_fin"],
+    ]
 
-
-
-    urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
+    urls = [
+        os.environ["moneycontrol"],
+        os.environ["economic_times"],
+        os.environ["yahoo_fin"],
+    ]
 
     docs = [WebBaseLoader(url).load() for url in urls]
     docs_list = [item for sublist in docs for item in sublist]
@@ -147,8 +154,6 @@ def process_user_input(input_text):
     # for res in results:
     #     print(f"* {res.page_content} [{res.metadata}]")
 
-
-
     retriever_tool = create_retriever_tool(
         retriever,
         "retriver_stock_market_updates",
@@ -157,24 +162,17 @@ def process_user_input(input_text):
 
     tools = [retriever_tool]
 
-
-
     class AgentState(TypedDict):
         # The add_messages function defines how an update should be processed
         # Default is to replace. add_messages says "append"
         messages: Annotated[Sequence[BaseMessage], add_messages]
 
-
-
-
     class AgentState(TypedDict):
         # The add_messages function defines how an update should be processed
         # Default is to replace. add_messages says "append"
         messages: Annotated[Sequence[BaseMessage], add_messages]
-
 
     ### Edges
-
 
     def grade_documents(state) -> Literal["generate", "rewrite"]:
         """
@@ -187,7 +185,7 @@ def process_user_input(input_text):
             str: A decision for whether the documents are relevant or not
         """
 
-        #print("---CHECK RELEVANCE---")
+        # print("---CHECK RELEVANCE---")
 
         # Data model
         class grade(BaseModel):
@@ -197,13 +195,13 @@ def process_user_input(input_text):
 
         # LLM
         # model = ChatOpenAI(temperature=0, model="gpt-4-0125-preview", streaming=True)
-        model =  ChatGoogleGenerativeAI(
-        model="gemini-1.5-pro",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2,
-        # other params...
+        model = ChatGoogleGenerativeAI(
+            model="gemini-1.5-pro",
+            temperature=0,
+            max_tokens=None,
+            timeout=None,
+            max_retries=2,
+            # other params...
         )
 
         # LLM with tool and validation
@@ -233,17 +231,15 @@ def process_user_input(input_text):
         score = scored_result.binary_score
 
         if score == "yes":
-            #print("---DECISION: DOCS RELEVANT---")
+            # print("---DECISION: DOCS RELEVANT---")
             return "generate"
 
         else:
-            #print("---DECISION: DOCS NOT RELEVANT---")
-            #print(score)
+            # print("---DECISION: DOCS NOT RELEVANT---")
+            # print(score)
             return "rewrite"
 
-
     ### Nodes
-
 
     def agent(state):
         """
@@ -256,10 +252,10 @@ def process_user_input(input_text):
         Returns:
             dict: The updated state with the agent response appended to messages
         """
-        #print("---CALL AGENT---")
+        # print("---CALL AGENT---")
         messages = state["messages"]
         # model = ChatOpenAI(temperature=0, streaming=True, model="gpt-4-turbo")
-        model =  ChatGoogleGenerativeAI(
+        model = ChatGoogleGenerativeAI(
             model="gemini-1.5-pro",
             temperature=0,
             max_tokens=None,
@@ -273,7 +269,6 @@ def process_user_input(input_text):
         # We return a list, because this will get added to the existing list
         return {"messages": [response]}
 
-
     def rewrite(state):
         """
         Transform the query to produce a better question.
@@ -285,7 +280,7 @@ def process_user_input(input_text):
             dict: The updated state with re-phrased question
         """
 
-        #print("---TRANSFORM QUERY---")
+        # print("---TRANSFORM QUERY---")
         messages = state["messages"]
         question = messages[0].content
 
@@ -315,7 +310,6 @@ def process_user_input(input_text):
         response = model.invoke(msg)
         return {"messages": [response]}
 
-
     def generate(state):
         """
         Generate answer
@@ -326,7 +320,7 @@ def process_user_input(input_text):
         Returns:
             dict: The updated state with re-phrased question
         """
-        #print("---GENERATE---")
+        # print("---GENERATE---")
         messages = state["messages"]
         question = messages[0].content
         last_message = messages[-1]
@@ -358,12 +352,10 @@ def process_user_input(input_text):
         response = rag_chain.invoke({"context": docs, "question": question})
         return {"messages": [response]}
 
-
-    #print("*" * 20 + "Prompt[rlm/rag-prompt]" + "*" * 20)
-    prompt = hub.pull("rlm/rag-prompt").pretty_print()  # Show what the prompt looks like
-
-
-
+    # print("*" * 20 + "Prompt[rlm/rag-prompt]" + "*" * 20)
+    prompt = hub.pull(
+        "rlm/rag-prompt"
+    ).pretty_print()  # Show what the prompt looks like
 
     # Define a new graph
     workflow = StateGraph(AgentState)
@@ -403,14 +395,11 @@ def process_user_input(input_text):
     # Compile
     graph = workflow.compile()
 
-
     try:
         display(Image(graph.get_graph(xray=True).draw_mermaid_png()))
     except Exception:
         # This requires some extra dependencies and is optional
         pass
-
-
 
     inputs = {
         "messages": [
@@ -424,18 +413,19 @@ def process_user_input(input_text):
     #         pprint.pprint(value, indent=2, width=80, depth=None)
     #     pprint.pprint("\n---\n")
 
-    #original output 
+    # original output
     # output_data = ""
     # for output in graph.stream(inputs):
     #     for key, value in output.items():
     #         output_data += f"\n**Output from node '{key}':**\n---\n"
     #         output_data += f"{pprint.pformat(value, indent=2, width=80, depth=None)}\n"
     #         output_data += "\n---\n"
-    
+
     # return output_data
 
     import pprint
     import ast
+
     # Initialize final_output as an empty dictionary string
     final_output = ""
 
@@ -454,14 +444,11 @@ def process_user_input(input_text):
 
     # print("converted coutput")
     # Extract the message and print it
-    final_message = output_dict['messages'][0]
+    final_message = output_dict["messages"][0]
     # print(type(final_message))
     print(final_message)
-    
-    return final_message
 
-process_user_input('is bajaj auto a good stock')
-   
+    return final_message
 
     # for output in graph.stream(inputs):
     #     for key, value in output.items():
@@ -470,7 +457,7 @@ process_user_input('is bajaj auto a good stock')
     #             final_output += "\n".join(str(v) for v in value.values())
     #         else:
     #             final_output += str(value)  # Handle non-dictionary values
-                
+
     #         final_output += "\n---\n"  # Separator for readability
 
     # return final_output

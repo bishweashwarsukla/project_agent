@@ -5,9 +5,13 @@ import getpass
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import warnings
+import json
+from langchain_core.prompts import PromptTemplate
+from chromadb import Client
+
 warnings.filterwarnings("ignore")
 from langchain_community.document_loaders import WebBaseLoader
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.tools.retriever import create_retriever_tool
 from typing import Annotated, Sequence
@@ -28,82 +32,80 @@ from langgraph.prebuilt import tools_condition
 import ast
 
 
-def build_vector_db():
-
-    def _set_env():
-        load_dotenv()
-        if "GOOGLE_API_KEY" not in os.environ:
-            os.environ["GOOGLE_API_KEY"] = getpass.getpass(
-                "Enter your Google AI API key: "
-            )
-
-    _set_env()
-
+def load_vector_db():
+    load_dotenv()
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-pro",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2,
-        # other params...
+    VECTOR_DB_PATH = "./agentDB"
+
+    vectorstore = Chroma(
+        collection_name="rag-chroma",
+        persist_directory=VECTOR_DB_PATH,
+        embedding_function=embeddings,
     )
+    retriever = vectorstore.as_retriever()
+
+    retriever_tool = create_retriever_tool(
+        retriever,
+        "retriever_stock_market_updates",
+        "Use the given documents to provide insights on stocks, finance, interest rates, bitcoin, real estate, news, bullish and bearish trends, etc.",
+    )
+
+    tools = [retriever_tool]
+    results = vectorstore.similarity_search(
+        "bullish stocks",
+        k=3,
+    )
+    for res in results:
+        print(f"* {res.page_content} [{res.metadata}]")
+
+    return retriever_tool, retriever, tools, vectorstore
+
+
+def build_vector_db():
+    load_dotenv()
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
     urls = [
         os.environ["moneycontrol"],
         os.environ["economic_times"],
         os.environ["yahoo_fin"],
+        os.environ["moneycontrol_2"],
+        os.environ["economic_times_2"],
+        os.environ["yahoo_fin_2"],
     ]
-
     docs = [WebBaseLoader(url).load() for url in urls]
     docs_list = [item for sublist in docs for item in sublist]
 
-    VECTOR_DB_PATH='./agentDB'
+    VECTOR_DB_PATH = "./agentDB"
 
-    if os.path.exists(VECTOR_DB_PATH):
-        print("Vector database already exists. Skipping creation.")
-        # Load the existing vector database
-        vectorstore = Chroma(
-            collection_name="rag-chroma",
-           # embedding=embeddings,
-            persist_directory=VECTOR_DB_PATH
-        )
-    else:  
-        text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-            chunk_size=100, chunk_overlap=20
-        )
-        doc_splits = text_splitter.split_documents(docs_list)
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        chunk_size=100, chunk_overlap=20
+    )
+    doc_splits = text_splitter.split_documents(docs_list)
 
-        # Add to vectorDB
-        vectorstore = Chroma.from_documents(
-            documents=doc_splits,
-            collection_name="rag-chroma",
-            #embedding=embeddings,
-            persist_directory=VECTOR_DB_PATH
-        )
-    
-    # retriever = vectorstore.as_retriever()
-    # Initialize retriever with embeddings
-    retriever = vectorstore.as_retriever(embedding_function=embeddings.embed_query)
-
-    retriever_tool = create_retriever_tool(
-        retriever,
-        "retriver_stock_market_updates",
-        "Search and return information about stocks in news whether they are good news or bad news , , bullish and bearnish newses as well",
+    # Pass this client to the Chroma store
+    vectorstore = Chroma.from_documents(
+        documents=doc_splits,
+        collection_name="rag-chroma",
+        embedding=embeddings,
+        persist_directory=VECTOR_DB_PATH,
     )
 
+    retriever = vectorstore.as_retriever()
+    retriever_tool = create_retriever_tool(
+        retriever,
+        "retriever_stock_market_updates",
+        "Use the given documents to provide insights on stocks, finance, interest rates, bitcoin, real estate, news, bullish and bearish trends, etc.",
+    )
     tools = [retriever_tool]
 
     return retriever_tool, retriever, tools, vectorstore
 
-def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore):
-    def _set_env():
-        load_dotenv()
-        if "GOOGLE_API_KEY" not in os.environ:
-            os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google AI API key: ")
 
-    _set_env()
+def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore):
+
+    load_dotenv()
 
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
@@ -114,23 +116,6 @@ def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore
         timeout=None,
         max_retries=2,
     )
-
-    # urls = [os.environ["moneycontrol"], os.environ["economic_times"], os.environ["yahoo_fin"]]
-    # docs = [WebBaseLoader(url).load() for url in urls]
-    # docs_list = [item for sublist in docs for item in sublist]
-
-    # text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=100, chunk_overlap=20)
-    # doc_splits = text_splitter.split_documents(docs_list)
-
-    # vectorstore = Chroma.from_documents(documents=doc_splits, collection_name="rag-chroma", embedding=embeddings)
-    # retriever = vectorstore.as_retriever()
-
-    # retriever_tool = create_retriever_tool(
-    #     retriever,
-    #     "retriver_stock_market_updates",
-    #     "Search and return information about stocks in news, identifying positive or negative sentiment, and bullish or bearish indicators.",
-    # )
-    # tools = [retriever_tool]
 
     class AgentState(TypedDict):
         messages: Annotated[Sequence[BaseMessage], add_messages]
@@ -170,7 +155,16 @@ def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore
     def generate(state):
         docs = state["messages"][-1].content
         question = state["messages"][0].content
-        prompt = hub.pull("rlm/rag-prompt")
+        # prompt = hub.pull("rlm/rag-prompt")
+        prompt = PromptTemplate(
+            template=(
+                "Use the following document information to answer the user's question as accurately as possible. "
+                "Respond with insights related to stock market updates, stocks, bitcoin, finance, interest rates, "
+                "cryptocurrency, news, bullish or bearish trends, and investments.\n\n"
+                "\n\nContext: {context}\n\nUser question: {question}\nAnswer:"
+            ),
+            input_variables=["context", "question"],
+        )
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)
         rag_chain = prompt | llm | StrOutputParser()
         response = rag_chain.invoke({"context": docs, "question": question})
@@ -182,7 +176,9 @@ def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore
     workflow.add_node("rewrite", rewrite)
     workflow.add_node("generate", generate)
     workflow.add_edge(START, "agent")
-    workflow.add_conditional_edges("agent", tools_condition, {"tools": "retrieve", END: END})
+    workflow.add_conditional_edges(
+        "agent", tools_condition, {"tools": "retrieve", END: END}
+    )
     workflow.add_conditional_edges("retrieve", grade_documents)
     workflow.add_edge("generate", END)
     workflow.add_edge("rewrite", "agent")
@@ -193,55 +189,14 @@ def process_user_input(input_text, retriever_tool, retriever, tools, vectorstore
 
     for output in graph.stream(inputs):
         for key, value in output.items():
-            final_output = pprint.pformat(value, indent=2, width=80, depth=None)
-
-    print(final_output)
-    # Parse the output to get the final message content
-    output_dict = ast.literal_eval(final_output)
-    final_messages = output_dict.get("messages", [])
-
-    # Ensure `final_messages` is a list and each message is a dictionary before accessing 'content'
-    if isinstance(final_messages, list):
-        for message in final_messages:
-            if isinstance(message, dict):
-                content = message.get("content", "")
-                print(content)  # Print the content directly
-                return content  # Return the first content found
-            else:
-                print("Error: Message is not in expected dictionary format.")
-    else:
-        print("Error: Messages not in expected list format.")
-    
-    return "No valid content found."
-
-    # inputs = {"messages": [("user", input_text)]}
-    # final_output = ""
-
-    # for output in graph.stream(inputs):
-    #     for key, value in output.items():
-    #         final_output = pprint.pformat(value, indent=2, width=80, depth=None)
-
-    # print(type(final_output))
-    # print(final_output)
-    # # output_dict = ast.literal_eval(final_output)
-    # # final_message = output_dict['messages'][0]
-    # # print(type(final_message))
-    # # print(final_message)
-    # # return final_message
-
-    # # Parse the output to get the final message content
-    # output_dict = ast.literal_eval(final_output)
-    # final_messages = output_dict.get("messages", [])
-    
-    # # Print only the 'content' of each message
-    # for message in final_messages:
-    #     content = message.get("content", "")
-    #     print(content)  # Print the content directly
-    
-    # return content
-
-# Test the function
-# print(process_user_input('Is Jio financial shares up today?'))
-
-retriever_tool, retriever, tools, vectorstore=build_vector_db()
-process_user_input('is jio financial shares up ?', retriever_tool, retriever, tools, vectorstore)
+            print("key", key)
+            print("value", value)
+            print("\n")
+            print("---------------")
+            pprint.pprint(f"Output from node '{key}':")
+            pprint.pprint("---")
+            pprint.pprint(value, indent=2, width=80, depth=None)
+        pprint.pprint("\n---\n")
+    output_values = output.values()
+    result = list(output_values)[0]["messages"][0]
+    return result
