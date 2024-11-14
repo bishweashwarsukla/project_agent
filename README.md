@@ -47,7 +47,7 @@ This repository contains a Dockerized Streamlit application for answering stock,
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/bishweashwarsukla/project_agent.git
-   cd sproject_agent
+   cd project_agent
    ```
 
 2. **Set Up Environment Variables**:
@@ -80,7 +80,9 @@ This repository contains a Dockerized Streamlit application for answering stock,
    ```
 2. **Create the Knowledge Base**: Click “Update Knowledge Base” in the Streamlit app to update the vector database or u can use existing database if it exists.
 
-### Running with Docker
+### Running with Docker 
+
+if you want you can pull the image using `docker pull kanukollugvt/flasktest-app`
 
 1. **Build the Docker Image**:
    ```bash
