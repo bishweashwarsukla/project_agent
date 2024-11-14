@@ -1,11 +1,11 @@
 
 [![CI/CD for Dockerized App](https://github.com/bishweashwarsukla/project_agent/actions/workflows/ci-cd.yml/badge.svg?branch=prod)](https://github.com/bishweashwarsukla/project_agent/actions/workflows/ci-cd.yml)
 
-Here's a sample `README.md` that documents your entire project setup:
+
 
 ---
 
-# Stock & Finance Query Assistant
+# Stock & Finance Query Assistant or Agent
 
 This repository contains a Dockerized Streamlit application for answering stock, finance, and cryptocurrency-related queries. It leverages a vector database (ChromaDB) for data retrieval and integrates with Google Generative AI embeddings. The project also includes a CI/CD pipeline using GitHub Actions for automated Docker image building, testing, and deployment.
 
@@ -46,18 +46,21 @@ This repository contains a Dockerized Streamlit application for answering stock,
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/stock-finance-query-assistant.git
-   cd stock-finance-query-assistant
+   git clone https://github.com/bishweashwarsukla/project_agent.git
+   cd sproject_agent
    ```
 
 2. **Set Up Environment Variables**:
    - Create a `.env` file to store API keys and URLs for financial data sources.
    - Example `.env`:
      ```plaintext
-     GOOGLE_API_KEY=your_google_api_key
-     moneycontrol=https://example.com/data1
-     economic_times=https://example.com/data2
-     yahoo_fin=https://example.com/data3
+     GOOGLE_API_KEY=<your_google_api_key>
+     moneycontrol = https://www.moneycontrol.com/stocks/marketstats/index.php
+     moneycontrol_2 = https://www.moneycontrol.com/stocksmarketsindia/
+     economic_times = https://economictimes.indiatimes.com/markets
+     economic_times_2 = https://economictimes.indiatimes.com/markets/live-coverage
+     yahoo_fin = https://finance.yahoo.com/topic/stock-market-news/
+     yahoo_fin_2 = https://finance.yahoo.com/markets/
      ```
 
 3. **Install Python Dependencies**:
@@ -75,17 +78,17 @@ This repository contains a Dockerized Streamlit application for answering stock,
    ```bash
    streamlit run app.py
    ```
-2. **Create the Knowledge Base**: Click “Update Knowledge Base” in the Streamlit app to build the vector database.
+2. **Create the Knowledge Base**: Click “Update Knowledge Base” in the Streamlit app to update the vector database or u can use existing database if it exists.
 
 ### Running with Docker
 
 1. **Build the Docker Image**:
    ```bash
-   docker build -t stock-finance-query-assistant .
+   docker build -t project_agent .
    ```
 2. **Run the Docker Container**:
    ```bash
-   docker run -p 8501:8501 kanukollugvt/flasktest-app:latest
+   docker run -p 8501:8501 kanukollugvt/flasktest-app
    ```
 3. Open `http://localhost:8501` in a browser to access the app.
 
@@ -121,7 +124,7 @@ The `Dockerfile` creates a containerized environment:
 
 ## Example Diagram
 
-![System Architecture Diagram](./path/to/diagram.png)
+![System Architecture Diagram](https://github.com/bishweashwarsukla/project_agent/blob/prod/graphof%20agent.jpeg)
 
 ---
 
@@ -143,7 +146,7 @@ This project is licensed under the MIT License.
 
 ## Contact
 
-For queries, feel free to reach out at `your-email@example.com`. 
+For queries, feel free to reach out at `goutham.kanukollu@tigeranalytics.com` or `bishweashwar.suk@tigeranalytics.com`. 
 
 ---
 
@@ -160,9 +163,9 @@ steps
 4. source .venv activate
 5. pip3 install -r requirements.txt
 
-![graph image](/project_agent/input/images/graph.jpg)
+![full workflow overview](https://github.com/bishweashwarsukla/project_agent/blob/prod/full%20workflow%20image.jpg)
 
-![graph image 2](/project_agent/input/images/graph2.jpg)
+![ci-cd](https://github.com/bishweashwarsukla/project_agent/blob/prod/ci-cd%20image.jpg)
 
-https://github.com/bishweashwarsukla/project_agent/blob/prod/graphof%20agent.jpeg
+
 
